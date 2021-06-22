@@ -26,11 +26,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('etl_clean', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -38,19 +38,34 @@ model = joblib.load("../models/your_model_name.pkl")
 @app.route('/index')
 def index():
     
-    # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
+    # Creating the x and y variables for Graph 1
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
-    # create visuals
-    # TODO: Below is an example - modify to create your own visuals
+    # Creating new dataframe with only the 36 categories
+    df2 = df.iloc[:,4:]
+    
+    # Creating the x and y variables for Graph 2
+    category_names = list(df2.columns)
+    category_counts = [df2.sum()[i] for i in range(len(df2.columns))]
+    
+    # Creating the x and y variables for Graph 3
+    pcts = [(df.direct_report.value_counts(normalize=True) * 100)[i] for i in range(2)]
+    pct_labels = ['non-direct report','direct report']
+    
+
+    # Below are 3 graphs
+    
     graphs = [
+        
+            # GRAPH 1: This shows the distribution of genre names by count
+        
         {
             'data': [
                 Bar(
                     x=genre_names,
-                    y=genre_counts
+                    y=genre_counts,
+                    marker=dict(color='rgb(85,201,159)')
                 )
             ],
 
@@ -63,7 +78,49 @@ def index():
                     'title': "Genre"
                 }
             }
-        }
+        },
+        
+            # GRAPH 2: This shows all categories by count, in ascending order 
+        
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=category_counts,
+                    marker=dict(color="darkorange")
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'categoryorder':'total ascending'
+                }
+            }
+        },
+        
+            # GRAPH 3: This shows direct reported messages vs non-direct reported messages, in percent
+        
+        {
+            'data': [
+                Bar(
+                    x=pct_labels,
+                    y=pcts,
+                    marker=dict(color="burlywood")
+                )
+            ],
+
+            'layout': {
+                'title': 'Direct vs Non-Direct Report',
+                'yaxis': {
+                    'title': "Percentages"
+                },
+            }
+        },
+        
     ]
     
     # encode plotly graphs in JSON
