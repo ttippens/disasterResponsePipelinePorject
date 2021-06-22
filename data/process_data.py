@@ -5,6 +5,19 @@ from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
     
+    '''
+    Function loads messages and categories, then merges on id
+    
+    Parameters
+    ----------
+    messages_filepath : string
+    categories_filepath : string
+    
+    Returns
+    -------
+    df : cleaned dataframe
+    '''
+    
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories, on='id')
@@ -12,18 +25,35 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     
-    categories = df['categories'].str.split(';',expand=True)    
+    '''
+    Function cleans and converts the categories into an encoding matrix;
+    drop duplicates.
+    
+    Parameters
+    ----------
+    df : merged dataframe returned by load_dat()
+    
+    Returns
+    -------
+    df : cleaned dataframe
+    '''
+    
+    #create a dataframe of the 36 individual category columns
+    categories = df['categories'].str.split(';',expand=True)   
+    
+    #rename the new columns
     row = categories.iloc[0]    
     category_colnames = row.apply(lambda x: x[:len(x) - 2]) 
     categories.columns = category_colnames
     
+    #Convert category values to just numbers 0 or 1
     for column in categories:
         # set each value to be the last character of the string
         categories[column] = categories[column].astype(str).str[-1]
     
         # convert column from string to numeric
         categories[column] = categories[column].astype(int)
-        
+    
     df.drop('categories', inplace=True, axis=1)
     df = pd.concat([df, categories], axis=1, join='inner', sort=False)
     df_duplicates = df[df.duplicated()]
@@ -34,6 +64,20 @@ def clean_data(df):
     return df
 
 def save_data(df, database_filename):
+    
+    '''
+    Function saves the cleaned data into a sqlite database
+    
+    Parameters
+    ----------
+    df : cleaned database
+    database_filename : string, database filepath
+    
+    Returns
+    -------
+    None.
+    '''
+    
     engine = create_engine('sqlite:///{}'.format(database_filename))
     df.to_sql('etl_clean', engine, index=False,if_exists = 'replace')
 
