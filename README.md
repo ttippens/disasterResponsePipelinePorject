@@ -7,14 +7,17 @@ During severe disasters, the disaster response oganizations aim at providing nec
 ### Files
 
 In data folder:
+
     - disaster_messages.csv Messages collected from social media
     - disaster_categories.csv Category information of the messages
     - process_data.py Python script for data processing
     
  In models folder:
+ 
     - train_classifier.py Python script for NLP-ML models
     
  In app folder:
+ 
     - files intended to build a web app
 
 ### Instructions:
