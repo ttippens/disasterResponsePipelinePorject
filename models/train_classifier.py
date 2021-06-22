@@ -20,6 +20,18 @@ from sklearn.model_selection import GridSearchCV
 
 
 def load_data(database_filepath):
+
+    '''
+    Parameters
+    ----------
+    database_filepath : string, e.g. 'message.db'
+
+    Returns
+    -------
+    X : dataframe, messages
+    Y : dataframe, labels
+    category_name : list
+    '''
      
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('etl_clean',engine)
@@ -38,7 +50,12 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
-    
+        
+    '''
+    Function normalizes cases, removes punctuation, stems, lemmatizes and 
+    parse a message into seperate words.
+    '''
+
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
     
@@ -52,6 +69,10 @@ def tokenize(text):
 
 def build_model():
     
+    '''
+    Function builds the pipeline for Ada Boost Classifier.
+    '''
+
     pipeline = Pipeline([
                 ('vect', CountVectorizer(tokenizer = tokenize)),
                 ('tfidf', TfidfTransformer()),
@@ -67,6 +88,21 @@ def build_model():
 
 def evaluate_model(model, X_test, Y_test, category_names):
     
+    '''
+    Function predicts the output based on the trained model and Xtest
+    
+    Parameters
+    ----------
+    model : trained model
+    X_test : dataframe
+    Y_test : dataframe
+    category_names: list
+    
+    Returns
+    -------
+    model report
+    '''
+
     for i in range(len(category_names)):
         Y_pred = model.predict(X_test)[i]
         Y_true = np.array(Y_test.iloc[i].values)
@@ -76,6 +112,10 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 def save_model(model, model_filepath):
     
+    '''
+    Function saves the trained model into a pickly file
+    '''
+
     passpkl_file = model_filepath
     model_pickle = open(passpkl_file,'wb')
     pickle.dump(model, model_pickle)
